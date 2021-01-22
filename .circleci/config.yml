@@ -129,7 +129,7 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
-              --tags project=udapeople \
+              --tags project=udapeople-backend \
               --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
@@ -137,14 +137,32 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
-              --tags project=udapeople \
+              --tags project=udapeople-frontend \
               --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            # Your code here
-            # exit 1
+            aws ec2 describe-instances \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --filters "Name=tag:project,Values=udapeople-backend" \
+            --output text >> .circleci/ansible/inventory.txt
+      - run:
+          name: Stash public IP address of backend instance
+          command: |
+            BACKEND_URL=$(tail -n 1 .circleci/ansible/inventory.txt)
+            curl -H "Content-Type: text/plain" -H \
+            "token: ${CIRCLE_WORKFLOW_ID}" \
+            --request PUT --data "$BACKEND_URL" https://api.memstash.io/values/backendurl
+      - run:
+          name: Install deps
+          command: |
+            # apt-get update -y
+            # apt-get install -y gzip
+            curl -H "token: ${CIRCLE_WORKFLOW_ID}" \
+            --request GET https://api.memstash.io/values/backendurl
+            yum -y install tar gzip
+            cat .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
