@@ -144,7 +144,7 @@ jobs:
           name: Add back-end ip to ansible inventory
           command: |
             # Your code here
-            exit 1
+            # exit 1
       - persist_to_workspace:
           root: ~/
           paths:
