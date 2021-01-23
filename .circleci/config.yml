@@ -184,6 +184,7 @@ jobs:
           name: Configure server
           command: |
             ansible-playbook .circleci/ansible/configure-server.yml -i .circleci/ansible/inventory.txt
+          no_output_timeout: 30m
       - destroy-environment
 
   # run-migrations:
