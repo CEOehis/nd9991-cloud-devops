@@ -180,12 +180,10 @@ jobs:
           command: |
             pip install awscli --upgrade --user
             pip install --user ansible
-            ansible --version
       - run:
           name: Configure server
           command: |
-            # Your code here
-            # exit 1
+            ansible-playbook .circleci/ansible/configure-server.yml -i .circleci/ansible/inventory.txt
       - destroy-environment
 
   # run-migrations:
