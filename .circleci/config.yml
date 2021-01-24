@@ -10,8 +10,8 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            # Your code here
-            exit 1
+            aws cloudformation delete-stack --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+            aws cloudformation delete-stack --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
@@ -119,58 +119,73 @@ jobs:
             cd backend
             npm audit --audit-level=critical
 
-  # deploy-infrastructure:
-    # docker:
-      # Docker image here that supports AWS CLI
-    # steps:
-      # Checkout code from git
-      # - run:
-      #     name: Ensure back-end infrastructure exists
-      #     command: |
-      #       aws cloudformation deploy \
-      #         --template-file .circleci/files/backend.yml \
-      #         #--tags project=your-tag \
-      #         # --stack-name "your back-end stack name with workflow id" \
-      #         # --parameter-overrides ID="your workflow id"
-      #         exit 1
-      # - run:
-      #     name: Ensure front-end infrastructure exist
-      #     command: |
-      #       aws cloudformation deploy \
-      #         --template-file .circleci/files/frontend.yml \
-      #         #--tags project=your-tag \
-      #         # --stack-name "your front-end stack name with workflow id" \
-      #         # --parameter-overrides ID="your workflow id"
-      #         exit 1
-      # - run:
-      #     name: Add back-end ip to ansible inventory
-      #     command: |
-      #       # Your code here
-      #       exit 1
-      # - persist_to_workspace:
-      #     root: ~/
-      #     paths:
-      #       - project/.circleci/ansible/inventory.txt
-      # Here's where you will add some code to rollback on failure
+  deploy-infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Ensure back-end infrastructure exists
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/backend.yml \
+              --tags project=udapeople-backend \
+              --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
+      - run:
+          name: Ensure front-end infrastructure exist
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/frontend.yml \
+              --tags project=udapeople-frontend \
+              --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
+      - run:
+          name: Add back-end ip to ansible inventory
+          command: |
+            aws ec2 describe-instances \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --filters "Name=tag:project,Values=udapeople-backend" \
+            --output text >> .circleci/ansible/inventory.txt
+      - run:
+          name: Stash public IP address of backend instance
+          command: |
+            BACKEND_URL=$(tail -n 1 .circleci/ansible/inventory.txt)
+            curl -H "Content-Type: text/plain" -H \
+            "token: ${CIRCLE_WORKFLOW_ID}" \
+            --request PUT --data "$BACKEND_URL" https://api.memstash.io/values/backendurl
+      - run:
+          name: Install deps
+          command: |
+            yum -y install tar gzip
+            cat .circleci/ansible/inventory.txt
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - .circleci/ansible/inventory.txt
+      - destroy-environment
 
-  # configure-infrastructure:
-  #   docker:
-      # Docker image here that supports Ansible
-    # steps:
-      # Checkout code from git
-      # Add ssh keys with fingerprint
-      # attach workspace
-      # - run:
-      #     name: Install dependencies
-      #     command: |
-      #       # Your code here
-      #       exit 1
-      # - run:
-      #     name: Configure server
-      #     command: |
-      #       # Your code here
-      #       exit 1
-      # Here's where you will add some code to rollback on failure
+  configure-infrastructure:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "18:12:73:49:56:54:fe:2b:74:b7:5b:03:38:b0:c7:db"
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Install dependencies
+          command: |
+            pip install awscli --upgrade --user
+            pip install --user ansible
+      - run:
+          name: Configure server
+          command: |
+            ansible-playbook .circleci/ansible/configure-server.yml -i .circleci/ansible/inventory.txt
+          no_output_timeout: 30m
+      - destroy-environment
 
   # run-migrations:
   #   docker:
@@ -298,13 +313,13 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
-      # - deploy-infrastructure:
-      #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-      #     filters:
-      #       branches:
-      #         only: [test-feature-branch]
-      # - configure-infrastructure:
-      #     requires: [deploy-infrastructure]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          # filters:
+          #   branches:
+          #     only: [test-feature-branch]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
       # - run-migrations:
       #     requires: [configure-infrastructure]
       # - deploy-frontend:
