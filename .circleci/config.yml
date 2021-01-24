@@ -186,7 +186,7 @@ jobs:
           name: Configure server
           command: |
             cat .circleci/ansible/inventory.txt
-            ansible-playbook -v .circleci/ansible/configure-server.yml -i .circleci/ansible/inventory.txt
+            ansible-playbook .circleci/ansible/configure-server.yml -i .circleci/ansible/inventory.txt
           no_output_timeout: 30m
       - destroy-environment
 
@@ -226,7 +226,6 @@ jobs:
             BACKEND_IP=$(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/backendurl)
             echo "export API_URL=http://${BACKEND_IP}:3030" >> $BASH_ENV
             echo "${API_URL}"
-            # env | grep API
       - run:
           name: Deploy frontend objects
           command: |
@@ -238,23 +237,28 @@ jobs:
       - destroy-environment
       - revert-migrations
 
-  # deploy-backend:
-  #   docker:
-      # Docker image here that supports Ansible
-    # steps:
-      # Checkout code from git
-      # Add ssh keys with fingerprint
-      # attach workspace
-      # - run:
-      #     name: Install dependencies
-      #     command: |
-      #       # your code here
-      # - run:
-      #     name: Deploy backend
-      #     command: |
-      #       # your code here
-      # Here's where you will add some code to rollback on failure
-
+  deploy-backend:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - aws-cli/install
+      - add_ssh_keys:
+          fingerprints:
+            - "18:12:73:49:56:54:fe:2b:74:b7:5b:03:38:b0:c7:db"
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Install dependencies
+          command: |
+            pip install --user ansible
+      - run:
+          name: Deploy backend
+          command: |
+            cat .circleci/ansible/inventory.txt
+            # ansible-playbook .circleci/ansible/deploy-backend.yml -i .circleci/ansible/inventory.txt
+      - destroy-environment
+      - revert-migrations
   # smoke-test:
   #   docker:
       # Lightweight Docker image
@@ -337,8 +341,8 @@ workflows:
           requires: [configure-infrastructure]
       - deploy-frontend:
           requires: [run-migrations]
-      # - deploy-backend:
-      #     requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
       # - smoke-test:
       #     requires: [deploy-backend, deploy-frontend]
       # - cloudfront-update:
