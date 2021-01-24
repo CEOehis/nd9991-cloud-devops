@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  aws-cli: circleci/aws-cli@1.3.2
+
 commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -23,7 +26,7 @@ commands:
           when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = $(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/migration-log)
+            SUCCESS=$(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/migration-log)
             if(( $SUCCESS==1 )); then
               cd ~/project/backend
               npm install
@@ -190,16 +193,18 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
+      - aws-cli/install
       - run:
           name: Run migrations
           command: |
             cd backend
-            npm run migration >> migration.log
+            npm install
+            npm run migrations >> migration.log
       - run:
           name: Send migration results to memstash
           command: |
             # check if any migration ran successfully
-            if grep - q "has been executed successfully" migration.log; then
+            if grep -q "has been executed successfully" migration.log; then
               curl -H "Content-Type: text/plain" -H \
               "token: ${CIRCLE_WORKFLOW_ID}" \
               --request PUT --data "migration successful" https://api.memstash.io/values/migration-log
@@ -215,11 +220,13 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            yum -y nodejs12
+            yum -y nodejs
+            npm --version
+            nodejs --version
       - run:
           name: Get backend url
           command: |
-            BACKEND_IP = $(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/backendurl)
+            BACKEND_IP=$(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/backendurl)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
       - run:
