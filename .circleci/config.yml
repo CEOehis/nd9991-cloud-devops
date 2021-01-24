@@ -20,16 +20,14 @@ commands:
     steps:
       - run:
           name: Revert migrations
-          # Add when this will run
+          when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = 1
-            if(( $SUCCESS==1 ));
-            then
-            #  cd ~/project/backend
-            #  npm install
-            #  Add revert code here. You can find this in the Getting Started section.
-              exit 1
+            SUCCESS = $(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/migration-log)
+            if(( $SUCCESS==1 )); then
+              cd ~/project/backend
+              npm install
+              npm run migrations:revert
             fi
 
 jobs:
@@ -187,22 +185,27 @@ jobs:
           no_output_timeout: 30m
       - destroy-environment
 
-  # run-migrations:
-  #   docker:
-      # Docker image here that supports NodeJS
-    # steps:
-      # Checkout code from git
-      # - run:
-      #     name: Run migrations
-      #     command: |
-      #       # Your code here
-      #       exit 1
-      # - run:
-      #     name: Send migration results to memstash
-      #     command: |
-      #       # Your code here
-      #       exit 1
-     # Here's where you will add some code to rollback on failure
+  run-migrations:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: Run migrations
+          command: |
+            cd backend
+            npm run migration >> migration.log
+      - run:
+          name: Send migration results to memstash
+          command: |
+            # check if any migration ran successfully
+            if grep - q "has been executed successfully" migration.log; then
+              curl -H "Content-Type: text/plain" -H \
+              "token: ${CIRCLE_WORKFLOW_ID}" \
+              --request PUT --data "migration successful" https://api.memstash.io/values/migration-log
+            fi
+      - destroy-environment
+      - revert-migrations
 
   # deploy-frontend:
   #   docker:
