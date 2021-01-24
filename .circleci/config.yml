@@ -70,6 +70,10 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - backend
 
   test-frontend:
     docker:
@@ -251,6 +255,10 @@ jobs:
             - "18:12:73:49:56:54:fe:2b:74:b7:5b:03:38:b0:c7:db"
       - attach_workspace:
           at: ~/project
+      - run: ls -al
+      - attach_workspace:
+          at: ~/tmp
+      - run: ls -al
       - run:
           name: Install dependencies
           command: |
