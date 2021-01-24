@@ -202,6 +202,8 @@ jobs:
             cd backend
             npm install
             npm run migrations >> migration.log
+            cat migration.log
+            ls -al
       - run:
           name: Send migration results to memstash
           command: |
