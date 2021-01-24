@@ -14,6 +14,8 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
+            # empty bucket
+            aws s3 rb --force s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation delete-stack --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
             aws cloudformation delete-stack --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
 
@@ -237,7 +239,6 @@ jobs:
             npm run build
             aws s3 cp ./dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - destroy-environment
-      - revert-migrations
 
   deploy-backend:
     docker:
@@ -259,11 +260,10 @@ jobs:
           name: Deploy backend
           command: |
             cat .circleci/ansible/inventory.txt
-            ls -al
+            ls -al backend
             exit 1
             # ansible-playbook .circleci/ansible/deploy-backend.yml -i .circleci/ansible/inventory.txt
       - destroy-environment
-      - revert-migrations
   # smoke-test:
   #   docker:
       # Lightweight Docker image
