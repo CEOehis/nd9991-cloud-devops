@@ -152,6 +152,7 @@ jobs:
           name: Stash public IP address of backend instance
           command: |
             BACKEND_URL=$(tail -n 1 .circleci/ansible/inventory.txt)
+            echo "Saving backend IP address ${BACKEND_URL}"
             curl -H "Content-Type: text/plain" -H \
             "token: ${CIRCLE_WORKFLOW_ID}" \
             --request PUT --data "$BACKEND_URL" https://api.memstash.io/values/backendurl
@@ -184,6 +185,7 @@ jobs:
       - run:
           name: Configure server
           command: |
+            cat .circleci/ansible/inventory.txt
             ansible-playbook -v .circleci/ansible/configure-server.yml -i .circleci/ansible/inventory.txt
           no_output_timeout: 30m
       - destroy-environment
@@ -222,12 +224,14 @@ jobs:
           name: Get backend url
           command: |
             BACKEND_IP=$(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/backendurl)
-            export API_URL="http://${BACKEND_IP}:3030"
+            echo "export API_URL=http://${BACKEND_IP}:3030" >> $BASH_ENV
             echo "${API_URL}"
+            # env | grep API
       - run:
           name: Deploy frontend objects
           command: |
             cd frontend
+            echo "${API_URL}"
             npm install
             npm run build
             aws s3 cp ./dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
