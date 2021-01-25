@@ -253,15 +253,8 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "18:12:73:49:56:54:fe:2b:74:b7:5b:03:38:b0:c7:db"
-      - run: ls -al backend
       - attach_workspace:
           at: ~/project
-      - run: ls -al backend
-      - run: ls -al
-      - attach_workspace:
-          at: ~/tmp
-      - run: ls -al
-      - run: ls -al ~/tmp
       - run:
           name: Install dependencies
           command: |
@@ -272,8 +265,7 @@ jobs:
           command: |
             cat .circleci/ansible/inventory.txt
             ls -al backend
-            exit 1
-            # ansible-playbook .circleci/ansible/deploy-backend.yml -i .circleci/ansible/inventory.txt
+            ansible-playbook .circleci/ansible/deploy-backend.yml -i .circleci/ansible/inventory.txt
       - destroy-environment
   # smoke-test:
   #   docker:

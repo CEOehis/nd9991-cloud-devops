@@ -1,1 +1,6 @@
-## Deployment playbook goes here.
+---
+
+- name: "Copy backend built files"
+  copy:
+    src: "{{ playbook_dir }}/../../backend/dist/"
+    dest: ~/project
