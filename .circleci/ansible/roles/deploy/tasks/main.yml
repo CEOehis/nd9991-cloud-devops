@@ -4,3 +4,7 @@
   copy:
     src: "{{ playbook_dir }}/../../backend/dist/"
     dest: ~/project
+
+- name: "Start backend server with pm2"
+  shell: |
+    pm2 start ~/project/main.js -f
