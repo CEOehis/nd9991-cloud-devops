@@ -7,4 +7,5 @@
 
 - name: "Start backend server with pm2"
   shell: |
+    env
     pm2 start ~/project/main.js -f
