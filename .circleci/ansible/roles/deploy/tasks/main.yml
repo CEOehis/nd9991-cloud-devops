@@ -2,7 +2,7 @@
 
 - name: "Copy backend built files"
   copy:
-    src: "{{ playbook_dir }}/../../backend/dist/"
+    src: "{{ playbook_dir }}/../../backend/dist"
     dest: ~/project
 
 - name: "Copy package.json"
@@ -23,4 +23,5 @@
 - name: "Start backend server with pm2"
   shell: |
     env
-    pm2 start ~/project/main.js -f
+    cd ~/project
+    pm2 start npm -- run "start:prod"
