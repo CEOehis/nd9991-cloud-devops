@@ -1,0 +1,27 @@
+---
+
+- name: "Copy backend built files"
+  copy:
+    src: "{{ playbook_dir }}/../../backend/dist"
+    dest: ~/project
+
+- name: "Copy package.json"
+  copy:
+    src: "{{ playbook_dir }}/../../backend/package.json"
+    dest: ~/project
+
+- name: "Copy package lock"
+  copy:
+    src: "{{ playbook_dir }}/../../backend/package-lock.json"
+    dest: ~/project
+
+- name: "Install dependencies"
+  shell: |
+    cd ~/project
+    npm install
+
+- name: "Start backend server with pm2"
+  shell: |
+    env
+    cd ~/project
+    pm2 start npm -- run "start:prod"
