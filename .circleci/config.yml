@@ -300,14 +300,15 @@ jobs:
 
   cloudfront-update:
     docker:
-      - image: amazon/aws-cli
+      - image: cimg/base:2020.01
     steps:
       - checkout
+      - node/install
+      - aws-cli/install
       - run:
           name: Install dependencies
           command: |
-            yum -y install tar gzip
-      - node/install
+            # yum -y install tar gzip
       - run:
           name: Update cloudfront distribution
           command: |
