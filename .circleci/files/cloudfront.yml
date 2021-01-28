@@ -8,7 +8,7 @@ Parameters:
 
 
 Resources:
-  
+
   CloudFrontOriginAccessIdentity:
     Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity"
     Properties:
@@ -33,8 +33,8 @@ Resources:
           ViewerProtocolPolicy: allow-all
 
 Outputs:
-  WorkflowID:
-    Value: !Sub ${WorkflowID}
+  CloudFrontDomain:
+    Value: !GetAtt WebpageCDN.DomainName
     Description: URL for website hosted on S3
     Export:
-      Name: WorkflowID
+      Name: CloudFrontDomain
