@@ -337,9 +337,14 @@ jobs:
                 --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
             echo "export OLD_WORKFLOW_ID=${OldWorkflowID}" >> $BASH_ENV
             echo "export STACKS=${STACKS}" >> $BASH_ENV
+            echo "${OldWorkflowID}"
+            echo "${STACKS}"
+
       - run:
           name: Remove old stacks and files
           command: |
+            echo "${OLD_WORKFLOW_ID}"
+            echo "${STACKS}"
             if [[ "${STACKS[@]}" =~ "${OLD_WORKFLOW_ID}" ]]
             then
               aws s3 rb --force s3://udapeople-${OLD_WORKFLOW_ID}
