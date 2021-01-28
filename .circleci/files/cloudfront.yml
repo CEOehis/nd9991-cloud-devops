@@ -40,4 +40,4 @@ Outputs:
     Value: !Sub ${WorkflowID}
     Description: Workflow ID for targeting previous deployments
     Export:
-      Name: WorkflowID
+      Name: !Sub ${WorkflowID}
