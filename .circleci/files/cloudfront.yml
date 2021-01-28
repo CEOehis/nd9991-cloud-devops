@@ -36,5 +36,8 @@ Outputs:
   CloudFrontDomain:
     Value: !GetAtt WebpageCDN.DomainName
     Description: URL for website hosted on S3
+  WorkflowID:
+    Value: !Sub ${WorkflowID}
+    Description: Workflow ID for targeting previous deployments
     Export:
-      Name: !Sub "CloudFrontDomain-${WorkflowID}"
+      Name: WorkflowID
