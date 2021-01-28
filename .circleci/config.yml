@@ -320,7 +320,7 @@ jobs:
       - destroy-environment
       - revert-migrations
 
-cleanup:
+  cleanup:
     docker:
       - image: cimg/base:2020.01
     steps:
