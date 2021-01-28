@@ -303,11 +303,11 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
-      - node/install
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            yum -y install tar gzip
+      - node/install
       - run:
           name: Update cloudfront distribution
           command: |
