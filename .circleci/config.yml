@@ -357,14 +357,19 @@ jobs:
           command: |
             echo "workflowID: ${OLD_WORKFLOW_ID}"
             echo "stacks: ${STACKS}"
-            if [[ "${STACKS[@]}" =~ "${OLD_WORKFLOW_ID}" ]]
-            then
+            echo "The list ${STACKS[@]}"
+            if [[ "${STACKS[@]}" =~ "${OLD_WORKFLOW_ID}" ]]; then
+              echo "Starting clean up of previous stacks"
+              echo "Emptying out S3 bucket"
               aws s3 rb --force s3://udapeople-${OLD_WORKFLOW_ID}
+              echo "Deleting backend stack"
               aws cloudformation delete-stack --stack-name "udapeople-backend-${OLD_WORKFLOW_ID}"
+              echo "Deleting frontend stack"
               aws cloudformation delete-stack --stack-name "udapeople-frontend-${OLD_WORKFLOW_ID}"
               echo "Old stacks successfully deleted"
             fi
-
+      - destroy-environment
+      - revert-migrations
 
 workflows:
   default:
