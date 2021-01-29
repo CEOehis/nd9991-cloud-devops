@@ -343,7 +343,7 @@ jobs:
             OLD_WORKFLOW_ID=$(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/oldworkflowid)
 
             export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
-                --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
+                --stack-status-filter CREATE_COMPLETE --no-paginate))
 
             echo $STACKS
             echo $OLD_WORKFLOW_ID
@@ -358,7 +358,7 @@ jobs:
             echo "workflowID: ${OLD_WORKFLOW_ID}"
             echo "stacks: ${STACKS}"
             echo "The list ${STACKS[@]}"
-            if [[ "${STACKS[@]}" =~ .*"${OLD_WORKFLOW_ID}".* ]]; then
+            if [[ "${STACKS[@]}" =~ "${OLD_WORKFLOW_ID}" ]]; then
               echo "Starting clean up of previous stacks"
               echo "Emptying out S3 bucket"
               aws s3 rb --force s3://udapeople-${OLD_WORKFLOW_ID}
