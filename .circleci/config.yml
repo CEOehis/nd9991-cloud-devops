@@ -355,10 +355,10 @@ jobs:
       - run:
           name: Remove old stacks and files
           command: |
-            echo "workflowID: ${OLD_WORKFLOW_ID}"
-            echo "stacks: ${STACKS}"
-            echo "The list ${STACKS[@]}"
-            bash --version
+            echo "workflowID:"
+            echo "$OLD_WORKFLOW_ID"
+            echo "The stacks:"
+            echo "$STACKS"
             if [[ "${STACKS[@]}" =~ "${OLD_WORKFLOW_ID}" ]]; then
               echo "Starting clean up of previous stacks"
               echo "Emptying out S3 bucket"
@@ -369,8 +369,8 @@ jobs:
               aws cloudformation delete-stack --stack-name "udapeople-frontend-${OLD_WORKFLOW_ID}"
               echo "Old stacks successfully deleted"
             fi
-      - destroy-environment
-      - revert-migrations
+      # - destroy-environment
+      # - revert-migrations
 
 workflows:
   default:
