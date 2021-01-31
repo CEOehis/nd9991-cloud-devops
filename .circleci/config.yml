@@ -342,24 +342,17 @@ jobs:
           command: |
             OLD_WORKFLOW_ID=$(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/oldworkflowid)
 
-            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
-                --stack-status-filter CREATE_COMPLETE --no-paginate))
-
-            echo $STACKS
             echo $OLD_WORKFLOW_ID
             echo "export OLD_WORKFLOW_ID=${OLD_WORKFLOW_ID}" >> $BASH_ENV
-            echo "export STACKS=${STACKS}" >> $BASH_ENV
             echo "workflowID: ${OLD_WORKFLOW_ID}"
-            echo "stacks: ${STACKS}"
 
       - run:
           name: Remove old stacks and files
           command: |
             echo "workflowID:"
             echo "$OLD_WORKFLOW_ID"
-            echo "The stacks:"
-            echo "$STACKS"
-            if [[ "${STACKS[@]}" =~ "${OLD_WORKFLOW_ID}" ]]; then
+            # if an old workflow exists
+            if [! -z $OLD_WORKFLOW_ID ]; then
               echo "Starting clean up of previous stacks"
               echo "Emptying out S3 bucket"
               aws s3 rb --force s3://udapeople-${OLD_WORKFLOW_ID}
@@ -369,8 +362,6 @@ jobs:
               aws cloudformation delete-stack --stack-name "udapeople-frontend-${OLD_WORKFLOW_ID}"
               echo "Old stacks successfully deleted"
             fi
-      # - destroy-environment
-      # - revert-migrations
 
 workflows:
   default:
